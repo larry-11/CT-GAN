@@ -62,3 +62,14 @@ During the experiment,  training loss is comprised of an adversarial term, a rec
 Qualitative samples of our generated CT sample are shown as follows:
 
 ![](https://github.com/larry-11/CT-GAN/blob/master/imgs/result.jpg)
+
+## References
+
+Paper:
+
+1. [SinGAN](https://openaccess.thecvf.com/content_ICCV_2019/papers/Shaham_SinGAN_Learning_a_Generative_Model_From_a_Single_Natural_Image_ICCV_2019_paper.pdf)
+
+Code:
+
+1. [SinGAN](https://github.com/FriedRonaldo/SinGAN)
+2. [LUNA16-LUng-Nodule-Analysis-2016-Challenge](https://github.com/junqiangchen/LUNA16-Lung-Nodule-Analysis-2016-Challenge)

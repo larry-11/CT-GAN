@@ -1,0 +1,1 @@
+python main_mhd.py --gpu 0

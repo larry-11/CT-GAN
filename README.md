@@ -4,11 +4,11 @@
 
 We propose an unconditioned CT-GAN based on a multi-scale pyramid of GAN to generate various CT scan
 
-![](https://github.com/larry-11/CT-GAN/tree/master/imgs/network.jpg)
+![](https://github.com/larry-11/CT-GAN/blob/master/imgs/network.jpg)
 
 Specifically, the G and D modules are structured as follows:
 
-![](https://github.com/larry-11/CT-GAN/tree/master/imgs/GD.jpg)
+![](https://github.com/larry-11/CT-GAN/blob/master/imgs/GD.jpg)
 
 ## DataSetUsed
 
@@ -61,4 +61,4 @@ During the experiment,  training loss is comprised of an adversarial term, a rec
 
 Qualitative samples of our generated CT sample are shown as follows:
 
-![](https://github.com/larry-11/CT-GAN/tree/master/imgs/result.jpg)
+![](https://github.com/larry-11/CT-GAN/blob/master/imgs/result.jpg)

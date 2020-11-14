@@ -6,9 +6,15 @@ We propose an unconditioned CT-GAN based on a multi-scale pyramid of GAN to gene
 
 ![](https://github.com/larry-11/CT-GAN/blob/master/imgs/network.jpg)
 
-Specifically, the G and D modules are structured as follows:
+We propose two generators based on the type of convolution filter: 2D and 3D. 
+
+Specifically, the 3D G and D modules are structured as follows:
 
 ![](https://github.com/larry-11/CT-GAN/blob/master/imgs/GD.jpg)
+
+The 2D G and D modules are structured as follows:
+
+![](https://github.com/larry-11/CT-GAN/blob/master/imgs/2D_GD.jpg)
 
 ## DataSetUsed
 
@@ -52,6 +58,8 @@ sh train.sh
 
 During the experiment,  training loss is comprised of an adversarial term, a reconstruction term, a projection term, and a segmentation term.
 
+### 3D CT-GAN experiment result:
+
 | **Setting** | **Lsgan_loss** | **Rec_loss** | **Pr_loss** | **Seg_loss** | **MSE** | **PSNR** | **SSIM** |
 | ----------- | -------------- | ------------ | ----------- | ------------ | ------- | -------- | -------- |
 | A           | √              |              |             |              | 0.0054  | 22.639   | 0.7514   |
@@ -59,7 +67,20 @@ During the experiment,  training loss is comprised of an adversarial term, a rec
 | C           | √              | √            | √           |              | 0.0024  | 26.070   | 0.8427   |
 | D           | √              | √            | √           | √            | 0.0017  | 27.925   | 0.8769   |
 
-Qualitative samples of our generated CT sample are shown as follows:
+Qualitative samples of our 3D generated CT sample are shown as follows:
+
+![](https://github.com/larry-11/CT-GAN/blob/master/imgs/result.jpg)
+
+| **Setting** | **Lsgan_loss** | **Rec_loss** | **Pr_loss** | **Seg_loss** | **MSE** | **PSNR** | **SSIM** |
+| ----------- | -------------- | ------------ | ----------- | ------------ | ------- | -------- | -------- |
+| A           | √              | √            |             |              | 0.00011 | 39.487   | 0.9878   |
+| B           | √              | √            | √           |              | 0.00049 | 33.094   | 0.9554   |
+| C           | √              | √            | √           | √            | 0.00032 | 34.931   | 0.9674   |
+| D           | √              | √            |             | √            | 0.00006 | 41.967   | 0.9956   |
+
+### 2D CT-GAN experiment result:
+
+Qualitative samples of our 2D generated CT sample are shown as follows:
 
 ![](https://github.com/larry-11/CT-GAN/blob/master/imgs/result.jpg)
 

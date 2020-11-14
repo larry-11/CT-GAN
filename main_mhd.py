@@ -18,8 +18,9 @@ import torch.utils.data
 import torch.utils.data.distributed
 
 from Vnet.model_vnet3d import Vnet3dModule
-from models.generator_mhd import Generator
-from models.discriminator_mhd import Discriminator
+import model.generator_2D.Generator as Generator_2D
+import model.generator_3D.Generator as Generator_3D
+import model.discriminator_3D.Discriminator as Discriminator_3D
 
 from train_mhd import *
 from validation import *
@@ -31,6 +32,7 @@ parser.add_argument('--data_dir', default='../data/', help='path to dataset')
 parser.add_argument('--dataset', default='MHD', help='type of dataset', choices=['MHD','PHOTO'])
 parser.add_argument('--gantype', default='lsgan', help='type of GAN loss', choices=['wgangp', 'zerogp', 'lsgan'])
 parser.add_argument('--model_name', type=str, default='SinGAN', help='model name')
+parser.add_argument('--modeltype', default='3D', help='type of GAN', choices=['2D', '3D'])
 parser.add_argument('--workers', default=8, type=int, help='number of data loading workers (default: 8)')
 parser.add_argument('--batch_size', default=1, type=int,
                     help='Total batch size - e.g) num_gpus = 2 , batch_size = 128 then, effectively, 64')
@@ -102,7 +104,7 @@ def main():
     formatted_print('Min image Size:', args.img_size_min)
     formatted_print('Log DIR:', args.log_dir)
     formatted_print('Result DIR:', args.res_dir)
-    formatted_print('GAN TYPE:', args.gantype)
+    formatted_print('GAN TYPE:', args.gantype, args.modeltype)
 
     if args.multiprocessing_distributed:
         args.world_size = ngpus_per_node * args.world_size
@@ -129,14 +131,18 @@ def main_worker(gpu, ngpus_per_node, args):
     ################
     # Define model #
     ################
-    # 4/3 : scale factor in the paper
     scale_factor = 3/2
     tmp_scale = args.img_size_max / args.img_size_min
     args.num_scale = int(np.round(np.log(tmp_scale) / np.log(scale_factor)))
     args.size_list = [int(args.img_size_min * scale_factor**i) for i in range(args.num_scale + 1)]
 
-    discriminator = Discriminator(args.img_size_min, args.num_scale, scale_factor)
-    generator = Generator(args.img_size_min, args.num_scale, scale_factor)
+    if args.modeltype == '3D':
+        discriminator = Discriminator_3D(args.img_size_min, args.num_scale, scale_factor)
+        generator = Generator_3D(args.img_size_min, args.num_scale, scale_factor)
+
+    elif args.modeltype == '2D':
+        discriminator = Discriminator_3D(args.img_size_min, args.num_scale, scale_factor)
+        generator = Generator_2D(args.img_size_min, args.num_scale, scale_factor)
 
     networks = [discriminator, generator]
 
@@ -235,11 +241,8 @@ def main_worker(gpu, ngpus_per_node, args):
     ######################
     # Validate and Train #
     ######################
-    z_fix_list = [F.pad(torch.randn(args.batch_size, 1, int(args.size_list[0]/6), args.size_list[0], args.size_list[0]), [5, 5, 5, 5, 5, 5], value=0)]
-    zero_list = [F.pad(torch.zeros(args.batch_size, 1, int(args.size_list[zeros_idx]/6), args.size_list[zeros_idx], args.size_list[zeros_idx]),
-                       [5, 5, 5, 5, 5, 5], value=0) for zeros_idx in range(1, args.num_scale + 1)]
-    # z_fix_list = [torch.randn(args.batch_size, 1, args.size_list[0], args.size_list[0], args.size_list[0])]
-    # zero_list = [torch.zeros(args.batch_size, 1, args.size_list[zeros_idx], args.size_list[zeros_idx], args.size_list[zeros_idx]) for zeros_idx in range(1, args.num_scale + 1)]
+    z_fix_list = [torch.randn(args.batch_size, 1, int(args.size_list[0]/6), args.size_list[0], args.size_list[0])]
+    zero_list = [torch.zeros(args.batch_size, 1, int(args.size_list[zeros_idx]/6), args.size_list[zeros_idx], args.size_list[zeros_idx]) for zeros_idx in range(1, args.num_scale + 1)]
     z_fix_list = z_fix_list + zero_list
 
     if args.validation:

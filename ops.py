@@ -236,6 +236,42 @@ class SpatialModulatedNorm2d(nn.Module):
         out = gamma * feat + beta
 
         return out
+# class SpatialModulatedNorm2d(nn.Module):
+#     def __init__(self, num_features, hid_features=64, momentum=0.1, num_classes=0):
+#         super().__init__()
+#         self.num_features = num_features
+#         self.hid_features = hid_features
+#         self.num_classes = num_classes
+#         if num_classes > 0:
+#             # self.bn = MultiConditionalBatchNorm2d(num_features, num_classes, momentum=momentum)
+#             self.bn = SelfModulratedBatchNorm2d(num_features, num_latent=256, num_classes=num_classes, momentum=momentum)
+#         else:
+#             self.bn = SelfModulratedBatchNorm2d(num_features, num_latent=256, momentum=momentum)
+#
+#         self.hidden_img = nn.Sequential(nn.Conv2d(3, hid_features, 3, 1, 1),
+#                                     nn.LeakyReLU(2e-1))
+#
+#         self.gamma = nn.Conv2d(hid_features, num_features, 3, 1, 1)
+#         self.beta = nn.Conv2d(hid_features, num_features, 3, 1, 1)
+#         # make one more hidden for z and concat to out then, get gamma and beta
+#         # or resize z * mask + img then, get hid -> gamma, beta
+#
+#     def forward(self, feat, img, z, y=None):
+#         rimg = F.interpolate(img, size=feat.size()[2:])
+#
+#         hidimg = self.hidden_img(rimg)
+#
+#         if self.num_classes > 0 and y is not None:
+#             feat = self.bn(feat, z.view(z.size(0), -1), y)
+#         else:
+#             feat = self.bn(feat, z.view(z.size(0), -1))
+#
+#         gamma = self.gamma(hidimg)
+#         beta = self.beta(hidimg)
+#         out = gamma * feat + beta
+#
+#         return out
+
 
 class SelfModulratedBatchNorm2d(nn.Module):
     def __init__(self, num_features, num_latent, num_hidden=0, num_classes=0, momentum=0.1):
@@ -580,3 +616,74 @@ def _FSpecialGauss(size, sigma):
     assert len(x) == size
     g = np.exp(-((x ** 2 + y ** 2) / (2.0 * sigma ** 2)))
     return g / g.sum()
+
+
+# def calc_generator_fid(model, data_loader, args, dims=2048):
+#     eps = 1e-6
+#
+#     incept = InceptionV3([InceptionV3.BLOCK_INDEX_BY_DIM[dims]])
+#
+#     model.eval()
+#     incept.eval()
+#
+#     valiter = iter(data_loader)
+#
+#     tot_iter = len(valiter)
+#
+#     pred_fake = np.empty((args.val_batch * tot_iter, dims))
+#     pred_real = np.empty((args.val_batch * tot_iter, dims))
+#
+#     if not next(model.parameters()).device == torch.device('cpu'):
+#         incept = incept.cuda(args.gpu)
+#
+#     for i in tqdm(range(tot_iter)):
+#         x_real, _ = next(valiter)
+#         z_in = torch.randn(args.val_batch, args.latent_size)
+#         if not next(model.parameters()).device == torch.device('cpu'):
+#             x_real = x_real.cuda(args.gpu, non_blocking=True)
+#             z_in = z_in.cuda(args.gpu, non_blocking=True)
+#         out = model(z_in)
+#         x_fake = out[0]
+#         x_fake = (x_fake + 1.0) / 2.0
+#         x_real = (x_real + 1.0) / 2.0
+#
+#         tmp_fake = incept(x_fake)[0]
+#         tmp_real = incept(x_real)[0]
+#         if tmp_fake.shape[2] != 1 or tmp_fake.shape[3] != 1:
+#             tmp_fake = adaptive_avg_pool2d(tmp_fake, output_size=(1, 1))
+#             tmp_real = adaptive_avg_pool2d(tmp_real, output_size=(1, 1))
+#
+#         pred_fake[i * args.val_batch: (i + 1) * args.val_batch] = tmp_fake.cpu().data.numpy().reshape(args.val_batch, -1)
+#         pred_real[i * args.val_batch: (i + 1) * args.val_batch] = tmp_real.cpu().data.numpy().reshape(args.val_batch, -1)
+#
+#     mu_fake = np.atleast_1d(np.mean(pred_fake, axis=0))
+#     std_fake = np.atleast_2d(np.cov(pred_fake, rowvar=False))
+#
+#     mu_real = np.atleast_1d(np.mean(pred_real, axis=0))
+#     std_real = np.atleast_2d(np.cov(pred_real, rowvar=False))
+#
+#     assert mu_fake.shape == mu_real.shape
+#     assert std_fake.shape == std_real.shape
+#
+#     mu_diff = mu_fake - mu_real
+#
+#     covmean, _ = linalg.sqrtm(std_fake.dot(std_real), disp=False)
+#
+#     if not np.isfinite(covmean).all():
+#         msg = ('fid calculation produces singular product; '
+#                'adding %s to diagonal of cov estimates') % eps
+#         print(msg)
+#         offset = np.eye(std_fake.shape[0]) * eps
+#         covmean = linalg.sqrtm((std_fake + offset).dot(std_real + offset))
+#
+#     # Numerical error might give slight imaginary component
+#     if np.iscomplexobj(covmean):
+#         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
+#             m = np.max(np.abs(covmean.imag))
+#             raise ValueError('Imaginary component {}'.format(m))
+#         covmean = covmean.real
+#
+#     tr_covmean = np.trace(covmean)
+#
+#     return mu_diff.dot(mu_diff) + np.trace(std_fake) + np.trace(std_real) - 2 * tr_covmean
+

@@ -28,7 +28,7 @@ def trainSinGAN(seg, data_loader, networks, opts, stage, args, additional):
     # switch to train mode
     D.train()
     G.train()
-
+    # summary writer
     train_it = iter(data_loader)
     total_iter = 1000 * (stage + 1)
     decay_lr = 800 * (stage + 1)
@@ -53,6 +53,7 @@ def trainSinGAN(seg, data_loader, networks, opts, stage, args, additional):
     for xidx in range(1, stage + 1):
         x_tmp = F.interpolate(x_org, (int(args.size_list[xidx]/6), args.size_list[xidx], args.size_list[xidx]), mode='trilinear', align_corners=True)
         x_in_list.append(x_tmp)
+    # target cube list
 
     for i in t_train:
         rec = open(os.path.join(args.log_dir, "loss_{}.txt".format(str(stage))), "a")
@@ -65,7 +66,6 @@ def trainSinGAN(seg, data_loader, networks, opts, stage, args, additional):
 
         for _ in range(g_iter):
             g_opt.zero_grad()
-            # 9 1*25*35*35 -> 1*249*259*259
             x_rec_list = G(z_rec)
             # reconstruction loss 
             g_rec = F.mse_loss(x_rec_list[-1], x_in)
@@ -100,19 +100,18 @@ def trainSinGAN(seg, data_loader, networks, opts, stage, args, additional):
             if (i+1)%250==0:
                 np.save(file="{}/gen_stage{}_iter{}.npy".format(args.log_dir, str(stage), str(i)), arr=x_rec_list[-1].cpu().detach().numpy())
                 np.save(file="{}/inp_stage{}_iter{}.npy".format(args.log_dir, str(stage), str(i)), arr=x_in.cpu().detach().numpy())
-            # save image
-            z_list = [F.pad(rmse_list[z_idx] * torch.randn(args.batch_size, 1, int(args.size_list[z_idx]/6), args.size_list[z_idx],
-                                               args.size_list[z_idx]).cuda(args.gpu, non_blocking=True),
-                            [5, 5, 5, 5, 5, 5], value=0) for z_idx in range(stage + 1)]
+
+            z_list = [rmse_list[z_idx] * torch.randn(args.batch_size, 1, int(args.size_list[z_idx]/6), args.size_list[z_idx],
+                                               args.size_list[z_idx]).cuda(args.gpu, non_blocking=True) for z_idx in range(stage + 1)]
+
             x_fake_list = G(z_list)
-            # 1*1*25*25*25
             g_fake_logit = D(x_fake_list[-1])
             ones = torch.ones((args.batch_size, 1)).cuda(args.gpu)
 
             if args.gantype == 'wgangp':
                 # wgan gp
                 g_fake = -torch.mean(g_fake_logit, (2, 3))
-                g_loss = g_fake + 100.0 * g_rec + 100.0 * g_pro + 10 * g_seg
+                g_loss = g_fake + 10.0 * g_rec + 10.0 * g_pro + 10 * g_seg
                 
             elif args.gantype == 'zerogp':
                 # zero centered GP
@@ -168,5 +167,8 @@ def trainSinGAN(seg, data_loader, networks, opts, stage, args, additional):
 
             d_losses.update(d_loss.item(), x_in.size(0))
 
+        rec.write('Iter: {} Loss: D {d_losses.avg:.5f} G {g_losses.avg:.5f} G_re {g_losses1:.5f} G_pro {g_losses2:.5f} G_seg {g_losses3:.5f}\n'
+                                .format(str(i), d_losses=d_losses, g_losses=g_losses, g_losses1=g_rec, g_losses2=g_pro, g_losses3=g_seg))
+        rec.close()
         t_train.set_description('Stage: [{}/{}] Avg Loss: D[{d_losses.avg:.3f}] G[{g_losses.avg:.3f}] RMSE[{rmse:.3f}]'
                                 .format(stage, args.num_scale, d_losses=d_losses, g_losses=g_losses, rmse=rmse_list[-1]))

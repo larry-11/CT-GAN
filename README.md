@@ -82,7 +82,7 @@ Qualitative samples of our 3D generated CT sample are shown as follows:
 
 Qualitative samples of our 2D generated CT sample are shown as follows:
 
-![](https://github.com/larry-11/CT-GAN/blob/master/imgs/result.jpg)
+![](https://github.com/larry-11/CT-GAN/blob/master/imgs/result_2D.jpg)
 
 ## References
 

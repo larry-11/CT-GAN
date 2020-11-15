@@ -71,14 +71,14 @@ Qualitative samples of our 3D generated CT sample are shown as follows:
 
 ![](https://github.com/larry-11/CT-GAN/blob/master/imgs/result.jpg)
 
+### 2D CT-GAN experiment result:
+
 | **Setting** | **Lsgan_loss** | **Rec_loss** | **Pr_loss** | **Seg_loss** | **MSE** | **PSNR** | **SSIM** |
 | ----------- | -------------- | ------------ | ----------- | ------------ | ------- | -------- | -------- |
 | A           | √              | √            |             |              | 0.00011 | 39.487   | 0.9878   |
 | B           | √              | √            | √           |              | 0.00049 | 33.094   | 0.9554   |
 | C           | √              | √            | √           | √            | 0.00032 | 34.931   | 0.9674   |
 | D           | √              | √            |             | √            | 0.00006 | 41.967   | 0.9956   |
-
-### 2D CT-GAN experiment result:
 
 Qualitative samples of our 2D generated CT sample are shown as follows:
 
